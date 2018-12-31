@@ -1,0 +1,71 @@
+Can I call FizzBuzz         /
+Get "1" when I pass in 1    /
+Get "2" when I pass in 2    /
+Get "Fizz" when I pass in 3 /
+Get "Buzz" when I pass in 5 / 
+Get "Fizz" when I pass in 6 (a multiple of 3) /
+Get "Buzz" when I pass in 10 (a multiple of 5) /
+Get "FizzBuzz" when I pass in 15 (a multple of 3 and 5)
+
+Step 1 - Red Phase - implement a failing unit test for the required functionality
+    i.e. here you would just write a test that you know will fail
+Step 2 - Green Phase - write just enough code to make the test pass
+    i.e. if you want the function to return 1, then literally make it return 1,
+    it doesn't have to work for any other use case at this stage
+Step 3 - Refactor - refactor the unit test and prod code to make it clean
+Repeat
+
+So for the first test case you just call FizzBuzz e.g.
+
+def test_callFizzBuzz();
+    FizzBuzz(1)
+
+Then for the second test case you call it with a value and confirm you get a string back
+e.g.
+
+def test_returns1With1Passedin()
+    assert FizzBuzz(1) == "1"
+
+But now test 2 duplicates test 1, so during refactor you remove the first testcase since
+the second test case proves the first test case as well
+
+We then write test case 3:
+
+def test_returns2With2PassedIn():
+    assert FizzBuzz(2) == "2"
+
+this requires us to update the FizzBuzz function so that it will deal more generally with
+values passed in.
+
+Now the test is passing, during refactor we now have two tests with duplicate code so we refactor the tests to have
+a utility function that can be used by the tests. e.g. 
+(note the assertion moves to the utlity function)
+
+def checkFizzBuzz( value, expectedRetVal ):
+    retVal = FizzBuzz(value)
+    assert retVal == expectedRetVal
+
+By test case 7, we end up with a function that looks like this:
+
+def fizzBuzz( value ):
+    if (value % 3) == 0:
+        return "Fizz"
+    if (value % 5) == 0:
+        return "Buzz"
+    return str(value)
+
+the if statements are identical so following the Green phase we should refactor this
+duplication out with another utility function:
+
+def fizzBuzz( value ):
+    if isMultiple (value, 3):
+        return "Fizz"
+    if isMultiple (value, 5):
+        return "Buzz"
+    return str(value)
+
+def isMultiple(value, modulus):
+    return (value % modulus) == 0
+
+
+
