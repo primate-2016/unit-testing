@@ -1,8 +1,185 @@
-Can create an instance of the Checkout class
-Can add an item price
-Can add an item
-Can calculate the current total
-Can add multiple items and get correct total
+/ Can create an instance of the Checkout class
+/ Can add an item price
+/ Can add an item
+/ Can calculate the current total
+/ Can add multiple items and get correct total
 Can add discount rules
 Can apply discount rules to the total
 Exception is thrown for item added without a price
+
+
+So as per the TDD Red, Green, Refactor cycle, the first test is simply whether you can instantiate a class of Checkout:
+
+def test_canInstantiateCheckout():
+    co = Checkout()
+
+this will fail because the class does not exist. In a separate python module(file) create the simplest class object to 
+pass the test:
+
+class Checkout:
+    pass
+
+import the class into the test_SuperMarketCheckout.py module
+
+____________________________________
+
+Next, add a new test function to check we can add and item string and the item price:
+
+def test_CanAddItemPrice():
+    co = Checkout()
+    co.addItemPrice("apple", 1)
+
+and enter the green phase to make this work:
+
+class Checkout:
+    
+    def addItemPrice(self, item, price):
+        pass
+
+Since we have to instantiate the Checkout class to add the item price, then this makes the first test to instantiate the class redundant, so refactor and remove item
+
+____________________________________
+
+
+Add a new test function to add the item
+
+def test_CanAddItem():
+    co = Checkout()
+    co.addItem("apple")
+
+Enter the green phase and implement just enough code to make the test pass:
+
+...
+    def addItem(self, item):
+        pass
+
+Now the instantiation of the Checkout class is duplicated, and this will be replicated by all the test cases, so add a test fixture to 
+instantiate the checkout class before each function and refactor the rest to:
+
+checkout_fixture is the instantiated checkout class obect.
+
+@pytest.fixture()
+def checkout_fixture():
+    checkout_fixture = Checkout()
+    return checkout_fixture
+
+def test_CanAddItemPrice(checkout_fixture):
+    checkout_fixture.addItemPrice("apple", 1)
+
+def test_CanAddItem(checkout_fixture):
+    checkout_fixture.addItem("apple")
+
+____________________________________
+
+Now can we calculate the total?
+
+...
+
+def test_CanCalculateTotal(checkout_fixture):
+    checkout_fixture.addItemPrice("apple", 1)
+    checkout_fixture.addItem("apple")
+    assert checkout_fixture.calculateTotal() == 1
+
+Enter the green phase and refactor to get the total. Since we should do the simplest thing to get the test to pass,
+hard code the class method/function to return 1:
+
+...
+
+    def calculateTotal(self):
+        return 1
+
+Refactor - the test_CanAddItem and test_CanAddItemPrice tests are no longer needed since both of these are being done in this test,
+remove this duplication.
+
+____________________________________
+
+Now we need to check we can add multple items and get the correct total:
+
+def test_GetCorrectTotalWithMultipleItems(checkout_fixture):
+    checkout_fixture.addItemPrice("apple", 1)
+    checkout_fixture.addItemPrice("banana", 2)
+    checkout_fixture.addItem("apple")
+    checkout_fixture.addItem("banana")
+    assert checkout_fixture.calculateTotal() == 3
+
+Here is where things start to get more interesting, so we need a dictionary to store the item prices and we need to init 
+the class properly with appropriate attributes for a Checkout. Change the code to the below:
+
+class Checkout:
+
+    def __init__(self, total = 0):
+        self.prices = {}
+        self.total = 0
+    
+    def addItemPrice(self, item, price): # i.e. the instance of the class, the item ("banana") and the price ("2)")
+        self.prices[item] = price # i.e. add to the dictionary of prices (created in init), the item and its price
+
+    def addItem(self, item): # add item is used to keep a running total of the item prices, adding an apple increases the total by the cost of one apple specified in the prices dictionary
+        self.total += self.prices[item]
+
+    def calculateTotal(self):
+        return self.total
+
+____________________________________
+
+Now we need to add a discount rule. This will be based on the item, the number of items required to trigger
+the discount and the discounted price
+
+def test_CanAddDiscountRule(checkout_fixture):
+    checkout_fixture.addDiscount("apple", 3, 2) # the discount price for 3 apples is 2 (rather than 3)
+
+in the class:
+
+...
+    def addDiscount(self, item, nbrRequired, discountPrice):
+        pass
+
+____________________________________
+
+Now need to test we can apply discount rules to the total.
+
+def test_CanApplyDiscountRule(checkout_fixture):
+    checkout_fixture.addDiscount("apple", 3, 2) # so the minimum nbr of things we can add the to checkout is 3 to make this test pass
+    checkout_fixture.addItem("a")
+    checkout_fixture.addItem("a")
+    checkout_fixture.addItem("a")
+    assert checkout_fixture.calculateTotal() == 2 # we know the total should be 2 based on the discount rule above.
+
+Now we have a number of problems with the checkout - we aren't maintaining a data structure for the discounts and we are trying
+to calculate the total based on a running total of the items added, but we won't know if there's a discount applicable until all
+items have been added. So we will disable the new test to validate the old tests still pass whilst we make the relevant changes:
+
+use the @pytest.mark.skip decorator
+
+To store the discounts in a data structure do the below:
+
+class Checkout:
+    class Discount:
+        def __init__(self, nbrItems, discountPrice):
+            self.nbrItems = nbrItems
+            self.discountPrice = discountPrice
+
+    def __init__(self, total = 0):
+        self.prices = {}
+        self.discounts = {}
+        self.total = 0
+    
+    def addDiscount(self, item, nbrItems, discountPrice):
+        discount = self.Discount(nbrItems, discountPrice) # this creates an instance of the sub-class "Discount" which acts as a data structure to contain the number of items needed to trigger the discount and the discountedPrice
+        self.discounts[item] = discount # now we have a dictionary keyed on the item where the item maps to a instance of the Discount class
+
+...
+
+Now we need to calculate the total after all the items have been added, to do this need to keep track of how many of each 
+item has been added - do this by adding a dictionary of integers keyed on the item string. The integer is the number of items added.
+Then update the calculateTotal method to iterate over the all of the counts in the items dictionary multiplying by each items price and
+return the total
+
+____________________________________
+
+Now check if an exception is thrown when we add an item without a price
+
+
+
+
+

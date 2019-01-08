@@ -8,7 +8,7 @@ def setupSession():
 def setupModule():
     print("\nfixture bound to the scope of this module/file")
 
-@pytest.fixture(scope="class", autouse=True) # this will get executed everytime a test class is called (since autouse is true)
+@pytest.fixture(scope="class", autouse=True) # this will get executed everytime a test class is initialised (since autouse is true)
 def setupClass():
     print ("\nfixture bound to the scope of classes")
 
