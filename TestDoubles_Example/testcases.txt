@@ -1,0 +1,14 @@
+/ Can call readFromFile
+/ readFromFile returns correct string
+readFromFile throws exception when file does not exist
+
+
+
+def test_returnsCorrectString(monkeypatch):
+    mock_file = MagicMock() # set up an instance of the MagicMock class called mock_file to mock a file
+    mock_file.readline = MagicMock(return_value="This is the first line\n") # make the readline builtin method return "This is the first line\n")
+    mock_open = MagicMock(return_value=mock_file) # set up another instance of the MagicMock class called mock_open and set the return value to be the mock_file instance of the class
+    monkeypatch.setattr("builtins.open", mock_open) # make the builtin file open function return the mock_open instance, which itself returns the mock_file
+    result = readFromFile("fake_path_to_file")
+    mock_open.assert_called_once_with("fake_path_to_file", "r") # since mock open replaces the file open function, we see how often it was called by a call to our readFromFile() function
+    assert result == "This is the first line\n"
